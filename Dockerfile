@@ -26,17 +26,23 @@ RUN a2enmod rewrite
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Increase PHP memory limit for Composer
+RUN echo "memory_limit=-1" > /usr/local/etc/php/conf.d/memory-limit.ini
+
 # Set working directory
 WORKDIR /var/www/html
+
+# Copy only composer files first to leverage Docker cache
+COPY composer.json composer.lock ./
+
+# Install dependencies without scripts (to save memory and avoid DB errors)
+RUN composer install --no-interaction --no-scripts --no-autoloader --no-dev --prefer-dist
 
 # Copy project files
 COPY . .
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-
-# Install dependencies
-RUN composer install --no-interaction --optimize-autoloader --no-dev
+# Finish composer
+RUN composer dump-autoload --optimize --no-dev
 
 # Build assets (if Node is needed, we'd add it, but for a simple build we can skip or add here)
 # Since Render runs the build, we assume the user has pushed the built assets or we add Node
