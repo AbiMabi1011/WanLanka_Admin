@@ -44,11 +44,6 @@ COPY . .
 # Finish composer
 RUN composer dump-autoload --optimize --no-dev
 
-# Build assets (if Node is needed, we'd add it, but for a simple build we can skip or add here)
-# Since Render runs the build, we assume the user has pushed the built assets or we add Node
-RUN curl -sL https://deb.nodesource.com/setup_18.x | bash - && apt-get install -y nodejs
-RUN npm install && npm run build
-
 # Configure Apache
 RUN sed -i 's|/var/www/html|/var/www/html/public|g' /etc/apache2/sites-available/000-default.conf
 
